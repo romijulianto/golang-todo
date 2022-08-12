@@ -7,11 +7,26 @@ import (
 
 type Todo struct {
 	ID          uint   `gorm:"primary_key" json:"id"`
-	Task        string `json:"title"`
+	Task        string `json:"task"`
 	Employee    string `json:"employee"`
 	Deadline    string `json:"deadline"`
 	Description string `json:"description"`
 	Completed   bool   `json:"completed"`
+}
+
+// CreateTodo creates a new todo
+func CreateTodo(c *fiber.Ctx) error {
+	db := database.DBConn
+	todo := new(Todo)
+	err := c.BodyParser(todo)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Check your input"})
+	}
+	err = db.Create(&todo).Error
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not create todo"})
+	}
+	return c.JSON(&todo)
 }
 
 // GetTodos returns all todos
@@ -30,21 +45,6 @@ func GetTodoById(c *fiber.Ctx) error {
 	err := db.Find(&todo, id).Error
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Could not find todo"})
-	}
-	return c.JSON(&todo)
-}
-
-// CreateTodo creates a new todo
-func CreateTodo(c *fiber.Ctx) error {
-	db := database.DBConn
-	todo := new(Todo)
-	err := c.BodyParser(todo)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Check your input"})
-	}
-	err = db.Create(&todo).Error
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not create todo"})
 	}
 	return c.JSON(&todo)
 }
